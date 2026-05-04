@@ -1,0 +1,149 @@
+.page { min-height: 100vh; background: var(--bg); }
+
+.content {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 100px 24px 80px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.title {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.sub {
+  font-size: 14px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+.actions { display: flex; gap: 12px; align-items: center; }
+
+/* EMPTY */
+.empty {
+  text-align: center;
+  padding: 100px 24px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+}
+
+.emptyIcon { font-size: 48px; margin-bottom: 16px; }
+
+.empty h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.empty p { color: var(--text3); font-size: 14px; }
+
+/* LIST */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 16px;
+}
+
+.row:hover {
+  border-color: var(--border2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.rowLeft {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  min-width: 0;
+}
+
+.rowScore {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 56px;
+}
+
+.scoreNum {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.scoreLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.rowFile {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowJd {
+  font-size: 12px;
+  color: var(--text3);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 380px;
+}
+
+.rowDate {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+.rowRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.skillCount {
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.viewLink {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 500;
+}

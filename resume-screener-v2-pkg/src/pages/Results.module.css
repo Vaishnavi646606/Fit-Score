@@ -1,0 +1,311 @@
+.page { min-height: 100vh; background: var(--bg); }
+
+.content {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 100px 24px 80px;
+}
+
+.topRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.back {
+  color: var(--text3);
+  text-decoration: none;
+  font-size: 13px;
+  display: block;
+  margin-bottom: 6px;
+  transition: color 0.2s;
+}
+.back:hover { color: var(--accent); }
+
+.title { font-size: 34px; font-weight: 800; letter-spacing: -1px; }
+.fileLine { font-size: 13px; color: var(--text3); margin-top: 4px; }
+.topActions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* USAGE BAR */
+.usageBox {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+
+.usageTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.usagePlan {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--text3);
+}
+
+.usageCount { font-size: 13px; font-weight: 600; }
+
+.usageTrack {
+  height: 5px;
+  background: var(--bg3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.usageFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s ease;
+}
+
+.upgradeNudge {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--accent2);
+  text-decoration: none;
+  font-weight: 500;
+}
+.upgradeNudge:hover { text-decoration: underline; }
+
+/* SCORE ROW */
+.scoreRow {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.scoreCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.scoreLabel {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.scoreSub { font-size: 12px; color: var(--text3); text-align: center; }
+
+.breakdowns {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.barRow { display: flex; align-items: center; gap: 10px; }
+.barLabel { font-size: 12px; color: var(--text2); width: 72px; flex-shrink: 0; }
+.barTrack { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.barFill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+.barVal { font-size: 12px; font-weight: 600; width: 36px; text-align: right; color: var(--text2); }
+
+.radarCard { display: flex; flex-direction: column; }
+
+.cardTitle {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* SKILLS ROW */
+.skillsRow { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+.tagCloud { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.matchedTag {
+  padding: 6px 12px;
+  background: rgba(67,233,123,0.08);
+  border: 1px solid rgba(67,233,123,0.2);
+  color: var(--accent3);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.missingTag {
+  padding: 6px 12px;
+  background: rgba(255,101,132,0.08);
+  border: 1px solid rgba(255,101,132,0.2);
+  color: var(--accent2);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* SUGGESTIONS */
+.suggestCard { margin-bottom: 16px; }
+.suggestions { display: flex; flex-direction: column; gap: 14px; }
+.suggestion {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.suggestion:last-child { border-bottom: none; padding-bottom: 0; }
+.suggNum { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 11px; color: var(--accent); letter-spacing: 1px; flex-shrink: 0; margin-top: 2px; }
+.suggText { font-size: 14px; color: var(--text2); line-height: 1.55; }
+
+/* ===== JOB RECOMMENDATIONS ===== */
+.jobsCard { margin-bottom: 32px; }
+
+.jobsHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.jobsSub {
+  font-size: 13px;
+  color: var(--text3);
+  font-weight: 300;
+}
+
+.unlockBtn {
+  background: rgba(108,99,255,0.1);
+  border: 1px solid rgba(108,99,255,0.3);
+  color: var(--accent);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.unlockBtn:hover { background: rgba(108,99,255,0.18); }
+
+.jobsList { display: flex; flex-direction: column; gap: 0; }
+
+.jobRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.jobRow:last-child { border-bottom: none; padding-bottom: 0; }
+
+.jobScore {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  width: 56px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.jobInfo { flex: 1; }
+
+.jobTitle {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 3px;
+}
+
+.jobMeta { font-size: 12px; color: var(--text3); margin-bottom: 8px; }
+
+.jobTags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.jobTag {
+  padding: 3px 10px;
+  background: rgba(108,99,255,0.08);
+  border: 1px solid rgba(108,99,255,0.2);
+  color: var(--accent);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.applyBtn {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  font-family: 'Syne', sans-serif;
+}
+.applyBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* LOCKED STATE */
+.lockedWrap { position: relative; }
+
+.lockedJobs { display: flex; flex-direction: column; gap: 0; }
+
+.blurred { filter: blur(4px); pointer-events: none; user-select: none; }
+
+.lockOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(10,10,15,0.92) 40%, rgba(10,10,15,0.6) 100%);
+  border-radius: 8px;
+}
+
+.lockBox {
+  text-align: center;
+  padding: 32px;
+}
+
+.lockIcon { font-size: 36px; margin-bottom: 12px; }
+
+.lockTitle {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.lockSub {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+/* BOTTOM */
+.bottomCta { display: flex; gap: 12px; flex-wrap: wrap; }
+
+@media (max-width: 700px) {
+  .scoreRow { grid-template-columns: 1fr; }
+  .skillsRow { grid-template-columns: 1fr; }
+}

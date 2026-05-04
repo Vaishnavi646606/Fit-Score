@@ -1,0 +1,14 @@
+services:
+  node:
+    build: ../fitscore-api
+    ports:
+      - "5000:5000"
+    env_file:
+      - ../fitscore-api/.env
+    depends_on:
+      - python
+
+  python:
+    build: .
+    ports:
+      - "8001:8000"
