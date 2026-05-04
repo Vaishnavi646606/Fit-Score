@@ -6,6 +6,12 @@
 **/dist-ssr/
 **/build/
 
+# Python caches
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
 # Logs
 *.log
 npm-debug.log*
