@@ -12,6 +12,11 @@ const authRoutes = require('./routes/auth');
 const app = express();
 const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+
+// Trust proxy for Render reverse proxy (CRITICAL: must be before session middleware)
+// This ensures OAuth sees HTTPS URLs from the reverse proxy
+app.set('trust proxy', 1);
 
 // CORS configuration
 const corsOptions = {
@@ -28,7 +33,11 @@ app.use(
     secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, sameSite: 'lax' }, // Set secure: true in production with HTTPS
+    cookie: {
+      secure: process.env.NODE_ENV === 'production' ? true : false,
+      sameSite: 'lax',
+      httpOnly: true,
+    },
   })
 );
 
