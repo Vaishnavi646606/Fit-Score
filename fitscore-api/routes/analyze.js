@@ -28,7 +28,7 @@ router.post('/', upload.single('resume'), async (req, res) => {
     });
     form.append('jd', jd);
 
-    const pythonUrl = process.env.PYTHON_URL || 'http://localhost:8000';
+    const pythonUrl = process.env.PYTHON_URL || 'http://127.0.0.1:8000';
 
     const pythonResponse = await axios.post(`${pythonUrl}/analyze`, form, {
       headers: form.getHeaders(),
