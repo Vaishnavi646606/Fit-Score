@@ -1,7 +1,9 @@
 // Frontend API utility for authenticated requests
 // src/utils/apiClient.js
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = (typeof import !== 'undefined' && typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+  ? import.meta.env.VITE_API_URL
+  : 'https://fit-score-1.onrender.com';
 
 export async function apiCall(endpoint, options = {}) {
   const token = localStorage.getItem('authToken');

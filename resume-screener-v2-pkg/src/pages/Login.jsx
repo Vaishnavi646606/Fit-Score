@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import styles from './Login.module.css'
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+const API_URL = import.meta.env.VITE_API_URL || 'https://fit-score-1.onrender.com'
 
 export default function Login() {
   const [mode, setMode] = useState('login')
@@ -99,7 +99,7 @@ export default function Login() {
               try {
                 const endpoint = mode === 'login' ? '/auth/login' : '/auth/register'
                 const body = mode === 'login' ? { email, password } : { email, password, name }
-                const res = await fetch(`${BACKEND_URL}${endpoint}`, {
+                const res = await fetch(`${API_URL}${endpoint}`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(body),
@@ -130,7 +130,7 @@ export default function Login() {
           <button
             className={styles.oauthBtn}
             onClick={() => {
-              window.location.href = `${BACKEND_URL}/auth/google`
+              window.location.href = `${API_URL}/auth/google`
             }}
           >
             Continue with Google
@@ -139,7 +139,7 @@ export default function Login() {
           <button
             className={styles.oauthBtn}
             onClick={() => {
-              window.location.href = `${BACKEND_URL}/auth/github`
+              window.location.href = `${API_URL}/auth/github`
             }}
           >
             Continue with GitHub

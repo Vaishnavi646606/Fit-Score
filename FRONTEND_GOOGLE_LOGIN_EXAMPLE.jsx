@@ -9,7 +9,8 @@ export default function GoogleLogin() {
 
   const handleGoogleLogin = () => {
     // Redirect to backend Google OAuth endpoint
-    window.location.href = 'http://localhost:5000/auth/google';
+    const API_URL = import.meta.env.VITE_API_URL || 'https://fit-score-1.onrender.com'
+    window.location.href = `${API_URL}/auth/google`;
   };
 
   const handleLogout = () => {
