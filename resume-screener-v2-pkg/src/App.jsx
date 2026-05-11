@@ -6,6 +6,7 @@ import History from './pages/History'
 import Login from './pages/Login'
 import Pricing from './pages/Pricing'
 import AuthCallback from './pages/AuthCallback.jsx'
+import AuthError from './pages/AuthError.jsx'
 import './index.css'
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/auth-callback" element={<AuthCallback />} />
+        <Route path="/auth-error" element={<AuthError />} />
       </Routes>
     </Router>
   )

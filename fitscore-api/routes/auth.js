@@ -16,10 +16,21 @@ router.get(
 // Google OAuth callback route
 router.get(
   '/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
+  passport.authenticate('google', {
+    failureRedirect: '/auth-error?message=' + encodeURIComponent('Google authentication failed'),
+    failureMessage: true,
+  }),
   async (req, res) => {
     try {
       // User is authenticated by passport, create JWT token
+      if (!req.user) {
+        return res.redirect(
+          `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth-error?message=${encodeURIComponent(
+            'Authentication failed: User not found'
+          )}`
+        );
+      }
+
       const token = jwt.sign(
         {
           id: req.user._id,
@@ -30,10 +41,14 @@ router.get(
         { expiresIn: '7d' }
       );
 
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth-callback?token=${token}`);
+      // Successfully authenticated, redirect to frontend with token
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      res.redirect(`${frontendUrl}/auth-callback?token=${token}`);
     } catch (err) {
       console.error('Error during Google callback:', err);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth-error?message=${encodeURIComponent(err.message)}`);
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const errorMessage = err.message || 'OAuth callback failed';
+      res.redirect(`${frontendUrl}/auth-error?message=${encodeURIComponent(errorMessage)}`);
     }
   }
 );
@@ -79,9 +94,21 @@ router.get(
 // GitHub OAuth callback route
 router.get(
   '/github/callback',
-  passport.authenticate('github', { failureRedirect: '/login' }),
+  passport.authenticate('github', {
+    failureRedirect: '/auth-error?message=' + encodeURIComponent('GitHub authentication failed'),
+    failureMessage: true,
+  }),
   async (req, res) => {
     try {
+      // User is authenticated by passport, create JWT token
+      if (!req.user) {
+        return res.redirect(
+          `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth-error?message=${encodeURIComponent(
+            'Authentication failed: User not found'
+          )}`
+        );
+      }
+
       const token = jwt.sign(
         {
           id: req.user._id,
@@ -92,10 +119,14 @@ router.get(
         { expiresIn: '7d' }
       );
 
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth-callback?token=${token}`);
+      // Successfully authenticated, redirect to frontend with token
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      res.redirect(`${frontendUrl}/auth-callback?token=${token}`);
     } catch (err) {
       console.error('Error during GitHub callback:', err);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth-error?message=${encodeURIComponent(err.message)}`);
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const errorMessage = err.message || 'OAuth callback failed';
+      res.redirect(`${frontendUrl}/auth-error?message=${encodeURIComponent(errorMessage)}`);
     }
   }
 );
