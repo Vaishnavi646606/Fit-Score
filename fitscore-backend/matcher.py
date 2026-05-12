@@ -1,7 +1,6 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from parser import extract_skills, extract_experience_years
-import re
+from parser import extract_skills, extract_experience_years, extract_keywords
 
 def calculate_score(resume_text: str, jd_text: str) -> dict:
     
@@ -10,9 +9,13 @@ def calculate_score(resume_text: str, jd_text: str) -> dict:
     
     resume_skills = set(extract_skills(resume_text))
     jd_skills = set(extract_skills(jd_text))
+    resume_keywords = extract_keywords(resume_text)
+    jd_keywords = extract_keywords(jd_text)
     
     print(f"✅ Resume skills extracted: {sorted(list(resume_skills))}")
     print(f"✅ JD skills required: {sorted(list(jd_skills))}")
+    print(f"🔑 Resume keywords: {resume_keywords}")
+    print(f"🔑 JD keywords: {jd_keywords}")
     
     # Exact matches
     matched = list(resume_skills & jd_skills)
@@ -97,12 +100,28 @@ def calculate_score(resume_text: str, jd_text: str) -> dict:
     
     print(f"👤 Resume experience: {resume_exp} years, JD requires: {jd_exp} years")
     print(f"📚 Education match: {edu_match}%, Experience match: {exp_match}%")
+
+    combined_keywords = sorted(set([*resume_keywords, *jd_keywords, *list(jd_skills)]))[:12]
+    radar_data = [
+        {"subject": "Skills", "A": skills_score},
+        {"subject": "Experience", "A": exp_match},
+        {"subject": "Education", "A": edu_match},
+        {"subject": "Keywords", "A": min(len(combined_keywords) * 8, 100)},
+        {"subject": "ATS", "A": final_score},
+    ]
     
     return {
         "score": final_score,
+        "matchedSkills": matched,
+        "missingSkills": missing,
+        "suggestions": suggestions,
+        "educationScore": edu_match,
+        "experienceScore": exp_match,
+        "skillsScore": skills_score,
+        "keywords": combined_keywords,
+        "radarData": radar_data,
         "matched_skills": matched,
         "missing_skills": missing,
-        "suggestions": suggestions,
         "skills_match": skills_score,
         "experience_match": exp_match,
         "education_match": edu_match,

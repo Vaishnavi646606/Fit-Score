@@ -47,7 +47,7 @@ export default function Upload() {
       formData.append('resume', file)
       formData.append('jd', jd)
 
-      const API_URL = import.meta.env.VITE_API_URL || 'https://fit-score-1.onrender.com'
+      const API_URL = import.meta.env.VITE_API_URL || 'https://fit-score-2.onrender.com'
       const res = await fetch(`${API_URL}/analyze`, {
         method: 'POST',
         body: formData,
@@ -60,7 +60,7 @@ export default function Upload() {
         data = {}
       }
 
-      console.log(data)
+      console.log('Full /analyze response:', data)
 
       if (!res.ok) {
         throw new Error(data?.message || data?.error || 'Failed to analyze resume')
@@ -79,20 +79,39 @@ export default function Upload() {
         fileName: file.name,
         jdSnippet: jd.slice(0, 80) + (jd.length > 80 ? '...' : ''),
         jobs: Array.isArray(data.jobs) ? data.jobs : [],
+        matchedSkills: Array.isArray(data?.matchedSkills)
+          ? data.matchedSkills
+          : Array.isArray(data?.matched)
+            ? data.matched
+            : Array.isArray(data?.matched_skills)
+              ? data.matched_skills
+              : [],
+        missingSkills: Array.isArray(data?.missingSkills)
+          ? data.missingSkills
+          : Array.isArray(data?.missing)
+            ? data.missing
+            : Array.isArray(data?.missing_skills)
+              ? data.missing_skills
+              : [],
+        suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
+        educationScore: typeof data.educationScore === 'number' ? data.educationScore : (typeof data.education_match === 'number' ? data.education_match : 0),
+        experienceScore: typeof data.experienceScore === 'number' ? data.experienceScore : (typeof data.experience_match === 'number' ? data.experience_match : 0),
+        skillsScore: typeof data.skillsScore === 'number' ? data.skillsScore : (typeof data.skills_match === 'number' ? data.skills_match : 0),
+        keywords: Array.isArray(data.keywords) ? data.keywords : [],
+        radarData: Array.isArray(data.radarData) ? data.radarData : [],
         matched: Array.isArray(data?.matchedSkills)
           ? data.matchedSkills
-          : Array.isArray(data?.matched_skills)
-            ? data.matched_skills
-            : Array.isArray(data?.matched)
-              ? data.matched
-              : Array.isArray(data?.skills)
-                ? data.skills
-                : [],
-        missing: Array.isArray(data.missing) ? data.missing : [],
-        suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
-        experience_match: typeof data.experience_match === 'number' ? data.experience_match : 0,
-        skills_match: typeof data.skills_match === 'number' ? data.skills_match : 0,
-        education_match: typeof data.education_match === 'number' ? data.education_match : 0,
+          : Array.isArray(data?.matched)
+            ? data.matched
+            : [],
+        missing: Array.isArray(data?.missingSkills)
+          ? data.missingSkills
+          : Array.isArray(data?.missing)
+            ? data.missing
+            : [],
+        experience_match: typeof data.experienceScore === 'number' ? data.experienceScore : (typeof data.experience_match === 'number' ? data.experience_match : 0),
+        skills_match: typeof data.skillsScore === 'number' ? data.skillsScore : (typeof data.skills_match === 'number' ? data.skills_match : 0),
+        education_match: typeof data.educationScore === 'number' ? data.educationScore : (typeof data.education_match === 'number' ? data.education_match : 0),
         timestamp: new Date().toISOString(),
       }
 
@@ -121,7 +140,7 @@ export default function Upload() {
   }
 
   const score = result?.score ?? null
-  const matchedSkills = result?.matched || []
+  const matchedSkills = result?.matchedSkills || result?.matched || []
 
   return (
     <div className={styles.page}>

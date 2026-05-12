@@ -84,13 +84,15 @@ export default function Results() {
 
   const adzunaJobs = r.jobs || []
 
-  const radarData = [
-    { subject: 'Skills', A: r.skills_match },
-    { subject: 'Experience', A: r.experience_match },
-    { subject: 'Education', A: r.education_match },
-    { subject: 'Keywords', A: Math.round(r.score * 0.95) },
-    { subject: 'Tools', A: Math.round(r.score * 0.88) },
-  ]
+  const radarData = Array.isArray(r.radarData) && r.radarData.length > 0
+    ? r.radarData
+    : [
+        { subject: 'Skills', A: r.skillsScore ?? r.skills_match ?? 0 },
+        { subject: 'Experience', A: r.experienceScore ?? r.experience_match ?? 0 },
+        { subject: 'Education', A: r.educationScore ?? r.education_match ?? 0 },
+        { subject: 'Keywords', A: Math.round(r.score * 0.95) },
+        { subject: 'ATS', A: Math.round(r.score * 0.88) },
+      ]
 
   return (
     <div className={styles.page}>
@@ -116,9 +118,9 @@ export default function Results() {
             <ScoreRing score={r.score} />
             <div className={styles.scoreSub}>Match against job description</div>
             <div className={styles.breakdowns}>
-              <Bar label="Skills" value={r.skills_match} color="var(--accent)" />
-              <Bar label="Experience" value={r.experience_match} color="var(--accent3)" />
-              <Bar label="Education" value={r.education_match} color="var(--accent2)" />
+              <Bar label="Skills" value={r.skillsScore ?? r.skills_match ?? 0} color="var(--accent)" />
+              <Bar label="Experience" value={r.experienceScore ?? r.experience_match ?? 0} color="var(--accent3)" />
+              <Bar label="Education" value={r.educationScore ?? r.education_match ?? 0} color="var(--accent2)" />
             </div>
           </div>
           <div className={`card ${styles.radarCard}`}>
@@ -138,22 +140,22 @@ export default function Results() {
             <h3 className={styles.cardTitle}>
               <span style={{color:'var(--accent3)'}}>✓</span> Matched Skills
               <span className={styles.badge} style={{background:'rgba(67,233,123,0.1)',color:'var(--accent3)'}}>
-                {r.matched.length}
+                {(r.matchedSkills || r.matched || []).length}
               </span>
             </h3>
             <div className={styles.tagCloud}>
-              {r.matched.map(s => <span key={s} className={styles.matchedTag}>{s}</span>)}
+              {(r.matchedSkills || r.matched || []).map(s => <span key={s} className={styles.matchedTag}>{s}</span>)}
             </div>
           </div>
           <div className={`card ${styles.skillCard}`}>
             <h3 className={styles.cardTitle}>
               <span style={{color:'var(--accent2)'}}>✗</span> Missing Skills
               <span className={styles.badge} style={{background:'rgba(255,101,132,0.1)',color:'var(--accent2)'}}>
-                {r.missing.length}
+                {(r.missingSkills || r.missing || []).length}
               </span>
             </h3>
             <div className={styles.tagCloud}>
-              {r.missing.map(s => <span key={s} className={styles.missingTag}>{s}</span>)}
+              {(r.missingSkills || r.missing || []).map(s => <span key={s} className={styles.missingTag}>{s}</span>)}
             </div>
           </div>
         </div>

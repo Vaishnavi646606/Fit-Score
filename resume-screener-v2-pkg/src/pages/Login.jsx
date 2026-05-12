@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import styles from './Login.module.css'
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://fit-score-1.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || 'https://fit-score-2.onrender.com'
 
 export default function Login() {
   const [mode, setMode] = useState('login')
