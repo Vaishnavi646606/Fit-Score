@@ -10,8 +10,11 @@ app = FastAPI()
 # React frontend ko allow karo
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", 
-                   "https://yourdomain.com"],
+    allow_origins=[
+        "https://fit-score-beta.vercel.app",
+        "http://localhost:5173"
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
