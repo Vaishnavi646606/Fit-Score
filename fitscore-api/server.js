@@ -28,12 +28,17 @@ app.set('trust proxy', 1);
 
 // CORS configuration - allows frontend to communicate with backend
 const corsOptions = {
-  origin: FRONTEND_URL,
+  origin: [
+    "https://fit-score-beta.vercel.app",
+    "http://localhost:5173"
+  ],
   credentials: true,
-  optionsSuccessStatus: 200,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 };
 
 app.use(cors(corsOptions));
+app.options("*", cors());
 app.use(express.json());
 
 // Session middleware for passport
