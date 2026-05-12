@@ -4,6 +4,7 @@ const axios = require('axios');
 const FormData = require('form-data');
 
 const Analysis = require('../models/Analysis');
+const { PYTHON_URL } = require('../config/python');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -28,9 +29,7 @@ router.post('/', upload.single('resume'), async (req, res) => {
     });
     form.append('jd', jd);
 
-    const pythonUrl = process.env.PYTHON_URL || 'http://127.0.0.1:8000';
-
-    const pythonResponse = await axios.post(`${pythonUrl}/analyze`, form, {
+    const pythonResponse = await axios.post(`${PYTHON_URL}/analyze`, form, {
       headers: form.getHeaders(),
       timeout: 60000,
     });

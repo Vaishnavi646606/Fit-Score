@@ -8,6 +8,7 @@ const passport = require('./config/passport');
 
 const analyzeRoutes = require('./routes/analyze');
 const authRoutes = require('./routes/auth');
+const { PYTHON_URL } = require('./config/python');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -19,6 +20,7 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 console.log(`Starting server in ${NODE_ENV} mode`);
 console.log(`Frontend URL: ${FRONTEND_URL}`);
 console.log(`Backend URL: ${BACKEND_URL}`);
+console.log(`Python service URL: ${PYTHON_URL}`);
 
 // Trust proxy for Render reverse proxy (CRITICAL: must be before session middleware)
 // This ensures OAuth sees HTTPS URLs from the reverse proxy
