@@ -5,7 +5,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# 👇 ADD THIS LINE (MOST IMPORTANT)
+# Validate spaCy availability in the image and install the language model.
+RUN python -m spacy validate || true
 RUN python -m spacy download en_core_web_sm
 
 COPY . .

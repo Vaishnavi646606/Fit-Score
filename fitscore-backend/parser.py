@@ -2,7 +2,12 @@ import pdfplumber
 import spacy
 import re
 
-nlp = spacy.load("en_core_web_sm")
+try:
+    nlp = spacy.load("en_core_web_sm")
+    print("✅ spaCy model loaded: en_core_web_sm")
+except Exception as exc:
+    nlp = None
+    print(f"⚠️ spaCy model unavailable, keyword extraction will use regex fallback: {exc}")
 
 # Comprehensive skills database
 SKILLS_DB = [
@@ -85,19 +90,37 @@ def extract_skills_with_fallback(text: str) -> list:
     return list(set(fallback))
 
 def extract_keywords(text: str) -> list:
-    """Extract important keywords using spaCy NER"""
-    doc = nlp(text[:2000])  # Limit to first 2000 chars for performance
+    """Extract important keywords using spaCy, with regex fallback."""
     keywords = set()
-    
-    for ent in doc.ents:
-        if ent.label_ in ["PERSON", "ORG", "GPE"]:
-            keywords.add(ent.text.lower())
-    
-    # Also extract noun chunks
-    for chunk in doc.noun_chunks:
-        if len(chunk.text.split()) <= 3:
-            keywords.add(chunk.text.lower())
-    
+
+    if nlp is not None:
+        try:
+            doc = nlp(text[:2000])  # Limit to first 2000 chars for performance
+            for ent in doc.ents:
+                if ent.label_ in ["PERSON", "ORG", "GPE"]:
+                    keywords.add(ent.text.lower())
+
+            for chunk in doc.noun_chunks:
+                chunk_text = chunk.text.lower().strip()
+                if 1 <= len(chunk_text.split()) <= 3:
+                    keywords.add(chunk_text)
+        except Exception as exc:
+            print(f"⚠️ spaCy keyword extraction failed, falling back to regex: {exc}")
+
+    if not keywords:
+        # Regex fallback for noisy PDFs or missing spaCy model
+        text_lower = text.lower()
+        tokens = re.findall(r"\b[a-z][a-z0-9\+\#\-\.]{2,}\b", text_lower)
+        stop_words = {
+            "the", "and", "with", "for", "from", "that", "this", "have", "has", "are",
+            "was", "were", "will", "your", "you", "our", "job", "role", "skills",
+            "experience", "responsibilities", "required", "preferred", "resume", "cv",
+            "team", "work", "working", "using", "used", "years", "year"
+        }
+        for token in tokens:
+            if token not in stop_words:
+                keywords.add(token)
+
     return list(keywords)[:10]  # Top 10 keywords
 
 def extract_experience_years(text: str) -> int:
