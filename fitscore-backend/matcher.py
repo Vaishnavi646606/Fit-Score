@@ -1,14 +1,15 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from parser import extract_skills, extract_experience_years, extract_keywords
+from parser import extract_skills, extract_experience_years, extract_keywords, extract_skills_with_fallback
 
 def calculate_score(resume_text: str, jd_text: str) -> dict:
     
     print(f"\n📋 ANALYZING RESUME (length: {len(resume_text)} chars)")
     print(f"📋 JOB DESCRIPTION (length: {len(jd_text)} chars)")
     
-    resume_skills = set(extract_skills(resume_text))
-    jd_skills = set(extract_skills(jd_text))
+    # prefer fallback-aware extractor for robustness in production
+    resume_skills = set(extract_skills_with_fallback(resume_text))
+    jd_skills = set(extract_skills_with_fallback(jd_text))
     resume_keywords = extract_keywords(resume_text)
     jd_keywords = extract_keywords(jd_text)
     

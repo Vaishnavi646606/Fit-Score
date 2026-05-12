@@ -42,6 +42,13 @@ router.post('/', upload.single('resume'), async (req, res) => {
     console.log(`📊 Python response:`, JSON.stringify(pythonResponse.data, null, 2));
 
     const pythonData = pythonResponse.data?.data || pythonResponse.data || {}
+    // If python provided extracted fields for observability, log them
+    if (pythonData.extracted_text) {
+      console.log('🔎 Python extracted_text (truncated):', pythonData.extracted_text.slice(0, 500));
+    }
+    if (pythonData.extracted_skills) {
+      console.log('🔎 Python extracted_skills:', pythonData.extracted_skills);
+    }
 
     const score = typeof pythonData?.score === 'number'
       ? pythonData.score

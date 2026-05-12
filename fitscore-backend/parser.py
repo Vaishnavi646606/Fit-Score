@@ -66,6 +66,24 @@ def extract_skills(text: str) -> list:
     
     return list(set(found_skills))  # Remove duplicates
 
+def extract_skills_with_fallback(text: str) -> list:
+    """Try primary extraction, then fallback to token-based matching"""
+    skills = extract_skills(text)
+    if skills:
+        return skills
+
+    # Tokenize and try simple matches for noisy text
+    tokens = re.findall(r"[a-zA-Z0-9\+\#\.]+", text.lower())
+    token_set = set(tokens)
+    fallback = []
+    for skill in SKILLS_DB:
+        sk = skill.lower()
+        sk_simple = re.sub(r"[^a-z0-9]", "", sk)
+        if sk in text.lower() or sk_simple in token_set:
+            fallback.append(skill)
+
+    return list(set(fallback))
+
 def extract_keywords(text: str) -> list:
     """Extract important keywords using spaCy NER"""
     doc = nlp(text[:2000])  # Limit to first 2000 chars for performance

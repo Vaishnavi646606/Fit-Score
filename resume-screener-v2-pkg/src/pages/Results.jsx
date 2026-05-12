@@ -78,6 +78,9 @@ export default function Results() {
 
   if (!r) return null
 
+  // Debug: log full analysis payload for runtime inspection
+  console.log('ANALYSIS RESPONSE (Results):', r)
+
   const label = r.score >= 80 ? 'Strong Match' : r.score >= 60 ? 'Good Match' : 'Needs Work'
   const labelColor = r.score >= 80 ? 'var(--accent3)' : r.score >= 60 ? 'var(--accent)' : 'var(--accent2)'
   const isPaid = true

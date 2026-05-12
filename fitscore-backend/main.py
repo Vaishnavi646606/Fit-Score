@@ -42,24 +42,39 @@ async def analyze_resume(
         print("📥 Extracting text from PDF...")
         resume_text = extract_text_from_pdf(temp_path)
         print(f"✅ Extracted {len(resume_text)} characters from resume")
-        
+
         if not resume_text:
             return {
                 "success": False,
                 "error": "Could not extract text from resume PDF"
             }
-        
-        # Extract skills to debug
-        resume_skills = extract_skills(resume_text)
-        jd_skills = extract_skills(jd)
+
+        # Extract skills to debug and provide fallback
+        try:
+            from parser import extract_skills_with_fallback
+            resume_skills = extract_skills_with_fallback(resume_text)
+            jd_skills = extract_skills_with_fallback(jd)
+        except Exception:
+            resume_skills = extract_skills(resume_text)
+            jd_skills = extract_skills(jd)
+
         print(f"✅ Resume skills: {resume_skills}")
         print(f"✅ JD skills: {jd_skills}")
-        
+
         print("🔍 Calculating match score...")
         result = calculate_score(resume_text, jd)
-        
-        print(f"✅ Analysis complete: Score={result.get('score')}, Matched={len(result.get('matched_skills', []))}")
-        
+
+        # Attach extracted fields for observability
+        result["extracted_text"] = (resume_text[:2000] + '...') if len(resume_text) > 2000 else resume_text
+        result["jd_text"] = (jd[:2000] + '...') if len(jd) > 2000 else jd
+        result["extracted_skills"] = {
+            "resume": resume_skills,
+            "jd": jd_skills
+        }
+
+        print(f"✅ Analysis complete: Score={result.get('score')}, Matched={len(result.get('matchedSkills') or result.get('matched_skills') or [])}")
+        print("📤 Final response payload:", json.dumps(result)[:2000])
+
         return {
             "success": True,
             "data": result
