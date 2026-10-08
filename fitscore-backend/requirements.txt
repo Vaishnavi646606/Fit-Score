@@ -6,3 +6,4 @@ scikit-learn
 python-multipart
 python-dotenv
 sentence-transformers
+google-genai
