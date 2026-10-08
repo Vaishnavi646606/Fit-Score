@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 import Navbar from '../components/Navbar'
 import styles from './Upload.module.css'
+import { API_URL, getToken } from '../auth'
 
 export default function Upload() {
   const navigate = useNavigate()
@@ -11,7 +12,7 @@ export default function Upload() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
-  const [usageKey, setUsageKey] = useState(0)
+ // const [usageKey, setUsageKey] = useState(0)
 
   const onDrop = useCallback(accepted => {
     if (accepted[0]) setFile(accepted[0])
@@ -29,15 +30,6 @@ export default function Upload() {
     return
   }
 
-  const fituser = JSON.parse(localStorage.getItem('fituser') || '{}')
-  const planLimits = { free: 10, plus: 50, pro: 100 }
-  const userPlan = fituser.plan || 'free'
-  const analysesLeft = fituser.analyses_left ?? planLimits[userPlan]
-  if (analysesLeft <= 0) {
-    setError('You have used all your analyses. Please upgrade your plan.')
-    return
-  }
-
     setLoading(true)
     setError('')
     setResult(null)
@@ -46,10 +38,11 @@ export default function Upload() {
       const formData = new FormData()
       formData.append('resume', file)
       formData.append('jd', jd)
+      
 
-      const API_URL = import.meta.env.VITE_API_URL || 'https://fit-score-2.onrender.com'
       const res = await fetch(`${API_URL}/analyze`, {
         method: 'POST',
+        headers: { Authorization: `Bearer ${getToken()}` },
         body: formData,
       })
 
@@ -66,6 +59,8 @@ export default function Upload() {
         throw new Error(data?.message || data?.error || 'Failed to analyze resume')
       }
 
+      const analysisData = data?.data ?? data
+
       const rawScore =
         typeof data?.score === 'number'
           ? data.score
@@ -78,7 +73,16 @@ export default function Upload() {
         message: typeof data?.message === 'string' ? data.message : '',
         fileName: file.name,
         jdSnippet: jd.slice(0, 80) + (jd.length > 80 ? '...' : ''),
-        jobs: Array.isArray(data.jobs) ? data.jobs : [],
+        //jobs: Array.isArray(analysisData.jobs) ? analysisData.jobs : [],
+        jobs: Array.isArray(data?.jobs)
+  ? data.jobs
+  : Array.isArray(data?.ranked_jobs)
+    ? data.ranked_jobs
+    : Array.isArray(analysisData?.jobs)
+      ? analysisData.jobs
+      : [],
+        llm_explanation: analysisData.llm_explanation || null,
+        score_breakdown: analysisData.score_breakdown || null,
         matchedSkills: Array.isArray(data?.matchedSkills)
           ? data.matchedSkills
           : Array.isArray(data?.matched)
@@ -86,51 +90,97 @@ export default function Upload() {
             : Array.isArray(data?.matched_skills)
               ? data.matched_skills
               : [],
-        missingSkills: Array.isArray(data?.missingSkills)
+        
+        missingSkills: Array.isArray(analysisData?.missingSkills)
           ? data.missingSkills
           : Array.isArray(data?.missing)
             ? data.missing
             : Array.isArray(data?.missing_skills)
               ? data.missing_skills
               : [],
-        suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
-        educationScore: typeof data.educationScore === 'number' ? data.educationScore : (typeof data.education_match === 'number' ? data.education_match : 0),
-        experienceScore: typeof data.experienceScore === 'number' ? data.experienceScore : (typeof data.experience_match === 'number' ? data.experience_match : 0),
-        skillsScore: typeof data.skillsScore === 'number' ? data.skillsScore : (typeof data.skills_match === 'number' ? data.skills_match : 0),
-        keywords: Array.isArray(data.keywords) ? data.keywords : [],
-        radarData: Array.isArray(data.radarData) ? data.radarData : [],
-        matched: Array.isArray(data?.matchedSkills)
-          ? data.matchedSkills
-          : Array.isArray(data?.matched)
-            ? data.matched
+        suggestions: Array.isArray(analysisData.suggestions) ? analysisData.suggestions : [],
+        educationScore: typeof analysisData.educationScore === 'number' ? analysisData.educationScore : (typeof analysisData.education_match === 'number' ? analysisData.education_match : 0),
+       experienceScore: typeof analysisData.experienceScore === 'number' ? analysisData.experienceScore : (typeof analysisData.experience_match === 'number' ? analysisData.experience_match : 0),
+                skillsScore: typeof analysisData.skillsScore === 'number'
+          ? analysisData.skillsScore
+          : (typeof analysisData.skills_match === 'number'
+            ? analysisData.skills_match
+            : 0),
+
+        keywords: Array.isArray(analysisData.keywords)
+          ? analysisData.keywords
+          : [],
+
+        radarData: Array.isArray(analysisData.radarData)
+          ? analysisData.radarData
+          : [],
+
+        matchedSkills: Array.isArray(analysisData?.matchedSkills)
+  ? analysisData.matchedSkills
+  : Array.isArray(analysisData?.matched)
+    ? analysisData.matched
+    : [],
+
+        missing: Array.isArray(analysisData?.missingSkills)
+          ? analysisData.missingSkills
+          : Array.isArray(analysisData?.missing)
+            ? analysisData.missing
             : [],
-        missing: Array.isArray(data?.missingSkills)
-          ? data.missingSkills
-          : Array.isArray(data?.missing)
-            ? data.missing
-            : [],
-        experience_match: typeof data.experienceScore === 'number' ? data.experienceScore : (typeof data.experience_match === 'number' ? data.experience_match : 0),
-        skills_match: typeof data.skillsScore === 'number' ? data.skillsScore : (typeof data.skills_match === 'number' ? data.skills_match : 0),
-        education_match: typeof data.educationScore === 'number' ? data.educationScore : (typeof data.education_match === 'number' ? data.education_match : 0),
+
+        experience_match: typeof analysisData.experienceScore === 'number'
+          ? analysisData.experienceScore
+          : (typeof analysisData.experience_match === 'number'
+            ? analysisData.experience_match
+            : 0),
+
+        skills_match: typeof analysisData.skillsScore === 'number'
+          ? analysisData.skillsScore
+          : (typeof analysisData.skills_match === 'number'
+            ? analysisData.skills_match
+            : 0),
+
+        education_match: typeof analysisData.educationScore === 'number'
+          ? analysisData.educationScore
+          : (typeof analysisData.education_match === 'number'
+            ? analysisData.education_match
+            : 0),
+
         timestamp: new Date().toISOString(),
       }
 
-      setResult(normalizedResult)
-      sessionStorage.setItem('fitresult', JSON.stringify(normalizedResult))
-      navigate('/results')
+      // Save user usage
+const user = JSON.parse(localStorage.getItem('fituser') || '{}')
+localStorage.setItem('fituser', JSON.stringify({
+  ...user,
+  plan: data.plan || user.plan || 'free',
+  analyses_left: data.analyses_left ?? user.analyses_left,
+}))
 
-      // Deduct one analysis from user's quota
-      const updatedUser = JSON.parse(localStorage.getItem('fituser') || '{}')
-      const planLimits = { free: 10, plus: 50, pro: 100 }
-      const currentPlan = updatedUser.plan || 'free'
-      const currentLeft = updatedUser.analyses_left ?? planLimits[currentPlan]
-      updatedUser.analyses_left = Math.max(0, currentLeft - 1)
-      localStorage.setItem('fituser', JSON.stringify(updatedUser))
-      setUsageKey(k => k + 1)
+// Save analysis result
+sessionStorage.setItem('fitresult', JSON.stringify(normalizedResult))
 
-      const history = JSON.parse(localStorage.getItem('fithistory') || '[]')
-      history.unshift(normalizedResult)
-      localStorage.setItem('fithistory', JSON.stringify(history.slice(0, 20)))
+// Save to history BEFORE navigating
+const history = JSON.parse(localStorage.getItem('fithistory') || '[]')
+
+const historyItem = {
+  ...normalizedResult,
+  matched: normalizedResult.matchedSkills || [],
+  missing: normalizedResult.missing || normalizedResult.missingSkills || [],
+}
+
+history.unshift(historyItem)
+
+localStorage.setItem(
+  'fithistory',
+  JSON.stringify(history.slice(0, 20))
+)
+
+// Update UI
+setResult(normalizedResult)
+//setUsageKey(k => k + 1)
+
+// Navigate only AFTER history is saved
+navigate('/results')
     } catch (err) {
       setError(err?.message || 'Something went wrong while analyzing your resume.')
       setResult(null)
@@ -152,43 +202,8 @@ export default function Upload() {
           <p className={styles.sub}>Drop your resume PDF and paste the job description below.</p>
         </div>
 
-        {(() => {
-  const _ = usageKey
-  const fituser = JSON.parse(localStorage.getItem('fituser') || '{}')
-  const planLimits = { free: 10, plus: 50, pro: 100 }
-  const userPlan = fituser.plan || 'free'
-  const analysesLeft = fituser.analyses_left ?? planLimits[userPlan]
-  const total = planLimits[userPlan]
-  const used = total - analysesLeft
-  const pct = Math.min((used / total) * 100, 100)
-  const color = pct > 80 ? '#ff6584' : '#43e97b'
-  return (
-    <div style={{
-      background: 'var(--card)',
-      border: '1px solid var(--border)',
-      borderRadius: '12px',
-      padding: '14px 20px',
-      marginBottom: '24px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '16px',
-    }}>
-      <div style={{ flex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-          <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1px', color: 'var(--text3)' }}>
-            {userPlan.toUpperCase()} PLAN
-          </span>
-          <span style={{ fontSize: '12px', fontWeight: 600, color }}>
-            {used} / {total} analyses used
-          </span>
-        </div>
-        <div style={{ height: '4px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '4px', transition: 'width 0.3s' }} />
-        </div>
-      </div>
-    </div>
-  )
-})()}
+        
+  
 {error && <div className={styles.errorBox}>{error}</div>}
 
         {result && (
@@ -268,6 +283,7 @@ export default function Upload() {
               <span className={styles.panelNum}>02</span>
               <span className={styles.panelLabel}>Job Description</span>
             </div>
+            
             <textarea
               className={styles.textarea}
               placeholder="Paste the full job description here…&#10;&#10;Include responsibilities, requirements, and tech stack for the most accurate score."

@@ -29,6 +29,16 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  plan: {
+    type: String,
+    enum: ['free', 'plus', 'pro'],
+    default: 'free',
+  },
+  analysesLeft: {
+    type: Number,
+    default: 10,
+    min: 0,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

@@ -1,14 +1,13 @@
 import { useEffect } from "react";
+import { TOKEN_KEY } from "../auth";
 
 export default function AuthCallback() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
 
-    console.log("TOKEN RECEIVED:", token);
-
     if (token) {
-      localStorage.setItem("token", token);
+      localStorage.setItem(TOKEN_KEY, token);
       window.location.href = "/upload";
     } else {
       window.location.href = "/login";

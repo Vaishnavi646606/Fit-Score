@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import styles from './Login.module.css'
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://fit-score-2.onrender.com'
+import { API_URL, TOKEN_KEY } from '../auth'
 
 export default function Login() {
   const [mode, setMode] = useState('login')
@@ -109,8 +108,8 @@ export default function Login() {
                   setError(data.message || 'Something went wrong')
                   return
                 }
-                localStorage.setItem('fittoken', data.token)
-                const fituser = { email: data.user.email, name: data.user.name, plan: 'free', analyses_left: 10 }
+                localStorage.setItem(TOKEN_KEY, data.token)
+                const fituser = { ...data.user, plan: data.user.plan || 'free', analyses_left: data.user.analyses_left ?? 10 }
                 localStorage.setItem('fituser', JSON.stringify(fituser))
                 window.location.href = '/upload'
               } catch (err) {

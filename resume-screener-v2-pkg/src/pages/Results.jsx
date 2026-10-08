@@ -85,7 +85,8 @@ export default function Results() {
   const labelColor = r.score >= 80 ? 'var(--accent3)' : r.score >= 60 ? 'var(--accent)' : 'var(--accent2)'
   const isPaid = true
 
-  const adzunaJobs = r.jobs || []
+ 
+  const rankedJobs = r.ranked_jobs || r.jobs || []
 
   const radarData = Array.isArray(r.radarData) && r.radarData.length > 0
     ? r.radarData
@@ -175,62 +176,318 @@ export default function Results() {
           </div>
         </div>
 
+                {/* ===== AI EXPLANATION ===== */}
+        {r.llm_explanation && (
+          <div
+            className="card"
+            style={{
+              marginTop: 24,
+              padding: 24,
+              border: '1px solid rgba(108,99,255,0.25)',
+              background: 'linear-gradient(135deg, rgba(108,99,255,0.08), rgba(67,233,123,0.04))'
+            }}
+          >
+            <h3
+              className={styles.cardTitle}
+              style={{ marginBottom: 20 }}
+            >
+              🤖 AI Resume Analysis
+            </h3>
+
+            {/* Why Fit */}
+            {r.llm_explanation.why_fit?.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <h4 style={{ marginBottom: 10 }}>
+                  💡 Why this is a good match
+                </h4>
+
+                <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.7 }}>
+                  {r.llm_explanation.why_fit.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Strengths */}
+            {r.llm_explanation.strengths?.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <h4 style={{ marginBottom: 10 }}>
+                  💪 Your Strengths
+                </h4>
+
+                <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.7 }}>
+                  {r.llm_explanation.strengths.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Missing Skills */}
+            {r.llm_explanation.missing_skills?.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <h4 style={{ marginBottom: 10 }}>
+                  ⚠️ Skills to Work On
+                </h4>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 8
+                  }}
+                >
+                  {r.llm_explanation.missing_skills.map((skill) => (
+                    <span
+                      key={skill}
+                      className={styles.missingTag}
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Resume Improvements */}
+            {r.llm_explanation.resume_improvements?.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <h4 style={{ marginBottom: 10 }}>
+                  📝 Resume Improvements
+                </h4>
+
+                <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.7 }}>
+                  {r.llm_explanation.resume_improvements.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Overall Explanation */}
+            {r.llm_explanation.overall_explanation && (
+              <div
+                style={{
+                  padding: 16,
+                  borderRadius: 10,
+                  background: 'rgba(0,0,0,0.15)',
+                  lineHeight: 1.7
+                }}
+              >
+                <strong>🔍 Overall Analysis</strong>
+
+                <p style={{ margin: '8px 0 0' }}>
+                  {r.llm_explanation.overall_explanation}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ===== JOB RECOMMENDATIONS ===== */}
-        <div className={`card ${styles.jobsCard}`}>
-          <div className={styles.jobsHeader}>
-            <div>
-              <h3 className={styles.cardTitle} style={{ marginBottom: 6 }}>
-                🎯 Job Recommendations For You
-              </h3>
-              <p className={styles.jobsSub}>
-                Real jobs matching your skills — direct apply links
-              </p>
-            </div>
+
+        {/* ===== JOB RECOMMENDATIONS ===== */}
+        {/* ===== INTELLIGENT JOB RECOMMENDATIONS ===== */}
+<div className={`card ${styles.jobsCard}`}>
+  <div className={styles.jobsHeader}>
+    <div>
+      <h3 className={styles.cardTitle} style={{ marginBottom: 6 }}>
+        🎯 Top Jobs For You
+      </h3>
+
+      <p className={styles.jobsSub}>
+        Jobs ranked using your resume, skills and semantic similarity
+      </p>
+    </div>
+  </div>
+
+  {rankedJobs.length > 0 ? (
+    <div className={styles.jobsList}>
+
+      {rankedJobs.map((job, i) => (
+        <div key={job.job_id || i} className={styles.jobRow}>
+
+          {/* Rank */}
+          <div style={{
+            width: 42,
+            height: 42,
+            borderRadius: '50%',
+            background: 'rgba(108,99,255,0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '16px',
+            fontWeight: 800,
+            flexShrink: 0
+          }}>
+            #{job.rank || i + 1}
           </div>
 
-          {adzunaJobs.length > 0 ? (
-            <div className={styles.jobsList}>
-              {adzunaJobs.map((job, i) => (
-                <div key={i} className={styles.jobRow}>
-                  <div style={{
-                    width: 36, height: 36, borderRadius: '50%',
-                    background: 'rgba(108,99,255,0.15)',
-                    display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', fontSize: '16px', flexShrink: 0,
-                  }}>🎯</div>
-                  <div className={styles.jobInfo}>
-                    <div className={styles.jobTitle}>{job.title}</div>
-                    <div className={styles.jobMeta}>
-                      {job.company} · {job.location} · {job.salary}
-                    </div>
-                    <div className={styles.jobMeta} style={{ marginTop: 4, fontSize: 11, opacity: 0.7 }}>
-                      {job.description}
-                    </div>
-                  </div>
-                  <a
-                    href={job.applyUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      padding: '8px 16px', borderRadius: '6px',
-                      background: 'var(--accent)', color: '#fff',
-                      fontSize: '13px', fontWeight: 700,
-                      textDecoration: 'none', textAlign: 'center',
-                      flexShrink: 0, whiteSpace: 'nowrap',
-                    }}
-                  >
-                    Apply →
-                  </a>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text3)', fontSize: '14px' }}>
-              No job recommendations available right now. Try again later.
-            </div>
-          )}
-        </div>
+          {/* Job information */}
+          <div className={styles.jobInfo}>
 
+            <div className={styles.jobTitle}>
+              {job.title}
+            </div>
+
+            <div className={styles.jobMeta}>
+            {job.company} · {job.location}
+            {job.source && <span style={{ marginLeft: 8, opacity: 0.7 }}>via {job.source}</span>}
+            </div>
+              
+
+            {/* FitScore */}
+            <div style={{
+              marginTop: 8,
+              fontWeight: 800,
+              color: job.score >= 80
+                ? 'var(--accent3)'
+                : job.score >= 60
+                  ? 'var(--accent)'
+                  : 'var(--accent2)'
+            }}>
+              FitScore: {job.score}/100
+            </div>
+
+            {/* Score breakdown */}
+            {job.score_breakdown && (
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                flexWrap: 'wrap',
+                marginTop: 8,
+                fontSize: 11
+              }}>
+                <span>
+                  Skills: {job.score_breakdown.skills_match}%
+                </span>
+
+                <span>
+                  Semantic: {job.score_breakdown.semantic_similarity}%
+                </span>
+
+                <span>
+                  TF-IDF: {job.score_breakdown.tfidf_similarity}%
+                </span>
+
+                <span>
+                  Experience: {job.score_breakdown.experience_match}%
+                </span>
+
+                <span>
+                  Education: {job.score_breakdown.education_match}%
+                </span>
+              </div>
+            )}
+
+            {/* Matched skills */}
+            {job.matched_skills?.length > 0 && (
+              <div style={{ marginTop: 10 }}>
+                <strong style={{ fontSize: 12 }}>
+                  ✓ Matched:
+                </strong>
+
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 6,
+                  marginTop: 5
+                }}>
+                  {job.matched_skills.map(skill => (
+                    <span
+                      key={skill}
+                      className={styles.matchedTag}
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Missing skills */}
+            {job.missing_skills?.length > 0 && (
+              <div style={{ marginTop: 10 }}>
+                <strong style={{ fontSize: 12 }}>
+                  ✗ Missing:
+                </strong>
+
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 6,
+                  marginTop: 5
+                }}>
+                  {job.missing_skills.map(skill => (
+                    <span
+                      key={skill}
+                      className={styles.missingTag}
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Why this job */}
+            {job.why_this_score && (
+              <div style={{
+                marginTop: 10,
+                padding: '10px 12px',
+                borderRadius: 8,
+                background: 'rgba(108,99,255,0.06)',
+                fontSize: 12,
+                lineHeight: 1.5
+              }}>
+                <strong>💡 Why this ranking?</strong>
+                <div style={{ marginTop: 4 }}>
+                  {job.why_this_score}
+                </div>
+              </div>
+            )}
+
+          </div>
+
+          {/* Apply button */}
+          {job.applyUrl && (
+  <a
+    href={job.applyUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+      padding: '8px 16px',
+      borderRadius: '6px',
+      background: 'var(--accent)',
+      color: '#fff',
+      fontSize: '13px',
+      fontWeight: 700,
+      textDecoration: 'none',
+      textAlign: 'center',
+      flexShrink: 0,
+      whiteSpace: 'nowrap'
+    }}
+  >
+    Apply →
+  </a>
+)}
+
+        </div>
+      ))}
+
+    </div>
+  ) : (
+    <div style={{
+      padding: '24px',
+      textAlign: 'center',
+      color: 'var(--text3)',
+      fontSize: '14px'
+    }}>
+      No ranked jobs available right now.
+    </div>
+  )}
+</div>
         <div className={styles.bottomCta}>
           <Link to="/upload" className="btn-primary" style={{padding:'14px 32px'}}>Try Another Job →</Link>
           <Link to="/history" className="btn-ghost" style={{padding:'14px 28px'}}>View All Analyses</Link>

@@ -2,17 +2,26 @@ const express = require('express');
 const multer = require('multer');
 const axios = require('axios');
 const FormData = require('form-data');
+const { fetchAllJobs } = require('../services/jobSources');
 
 const Analysis = require('../models/Analysis');
 const { PYTHON_URL } = require('../config/python');
+const authMiddleware = require('../middleware/authMiddleware');
+const User = require('../models/User');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.post('/', upload.single('resume'), async (req, res) => {
+router.post('/', authMiddleware, upload.single('resume'), async (req, res) => {
   try {
+    const user = await User.findById(req.user.id);
+
+if (!user) {
+  return res.status(401).json({ message: 'User not found' });
+}
     const file = req.file;
     const jd = req.body.jd;
+   
 
     console.log('\n🚀 ANALYZE REQUEST RECEIVED');
     console.log(`📄 Resume file: ${file?.originalname} (${file?.size} bytes)`);
@@ -36,7 +45,7 @@ router.post('/', upload.single('resume'), async (req, res) => {
     console.log(`🐍 Calling Python backend at: ${PYTHON_URL}/analyze`);
     const pythonResponse = await axios.post(`${PYTHON_URL}/analyze`, form, {
       headers: form.getHeaders(),
-      timeout: 60000,
+      timeout: 180000,
     });
     console.log(`✅ Python response received (status: ${pythonResponse.status})`);
     console.log(`📊 Python response:`, JSON.stringify(pythonResponse.data, null, 2));
@@ -65,7 +74,9 @@ router.post('/', upload.single('resume'), async (req, res) => {
     await Analysis.create({
       score,
       jd: jd.trim(),
+      userId: user._id,
     })
+    
     console.log(`✅ Analysis saved to DB`);
 
     const matchedSkills = pythonData.matchedSkills || pythonData.matched_skills || pythonData.matched || []
@@ -87,69 +98,136 @@ router.post('/', upload.single('resume'), async (req, res) => {
     console.log(`🧩 Missing skills: ${missingSkills.join(', ')}`);
     console.log(`💡 Suggestions: ${suggestions.join(' | ')}`);
 
-    const topSkills = matchedSkills.slice(0, 5).join(' ')
-    const searchQuery = topSkills || 'Software Developer'
-    console.log(`🔍 Adzuna search query: "${searchQuery}"`);
 
-    let adzunaJobs = []
+
+      // ==================================================
+// 🔎 JOB SEARCH QUERIES FROM JD
+// ==================================================
+
+const jdLower = jd.toLowerCase();
+
+const possibleRoles = [
+  'data analyst',
+  'business analyst',
+  'data scientist',
+  'machine learning engineer',
+  'ai engineer',
+  'ai/ml engineer',
+  'software engineer',
+  'software developer',
+  'python developer',
+  'full stack developer',
+  'backend developer',
+  'frontend developer',
+  'java developer',
+  'web developer',
+];
+
+const detectedRoles = possibleRoles.filter(role =>
+  jdLower.includes(role)
+);
+
+const searchQueries =
+  detectedRoles.length > 0
+    ? detectedRoles
+    : ['Software Engineer', 'Data Analyst', 'AI Engineer'];
+
+console.log(
+  `🔍 JD-based job search queries: ${searchQueries.join(' | ')}`
+);
+    let adzunaJobs = [];
     try {
-      const adzunaApiId = process.env.ADZUNA_APP_ID;
-      const adzunaApiKey = process.env.ADZUNA_API_KEY;
-      
-      if (!adzunaApiId || !adzunaApiKey) {
-        console.warn('⚠️  Adzuna credentials missing - skipping job search');
-        console.log(`ADZUNA_APP_ID: ${adzunaApiId ? '✅ SET' : '❌ MISSING'}`);
-        console.log(`ADZUNA_API_KEY: ${adzunaApiKey ? '✅ SET' : '❌ MISSING'}`);
-      } else {
-        console.log(`✅ Adzuna credentials found, making API call...`);
-      }
-      
-      const adzunaRes = await axios.get(
-        `https://api.adzuna.com/v1/api/jobs/in/search/1`,
-        {
-          params: {
-            app_id: adzunaApiId,
-            app_key: adzunaApiKey,
-            results_per_page: 5,
-            what: searchQuery,
-            where: 'india',
-            sort_by: 'relevance',
-          },
-          timeout: 10000,
-        }
-      )
-      console.log(`✅ Adzuna API response (status: ${adzunaRes.status})`);
-      console.log(`📊 Total jobs found: ${adzunaRes.data?.results?.length || 0}`);
-      
-      adzunaJobs = (adzunaRes.data?.results || []).slice(0, 5).map(job => ({
-        title: job.title,
-        company: job.company?.display_name || 'Unknown',
-        location: job.location?.display_name || 'India',
-        redirect_url: job.redirect_url,
-        applyUrl: job.redirect_url,
-        description: job.description?.slice(0, 120) + '...',
-        created: job.created,
-      }))
-      console.log(`✅ Processed ${adzunaJobs.length} jobs for frontend`);
-      
-    } catch (adzunaErr) {
-      console.error('❌ Adzuna API error:', adzunaErr.message);
-      if (adzunaErr.response) {
-        console.error(`   Status: ${adzunaErr.response.status}`);
-        console.error(`   Data: ${JSON.stringify(adzunaErr.response.data)}`);
-      }
-      adzunaJobs = [
-        {
-          title: `Search more ${searchQuery} roles`,
-          company: 'Adzuna',
-          location: 'India',
-          redirect_url: `https://www.adzuna.in/search?keywords=${encodeURIComponent(searchQuery)}&location=India`,
-          applyUrl: `https://www.adzuna.in/search?keywords=${encodeURIComponent(searchQuery)}&location=India`,
-          description: 'Open Adzuna search results for this skill set.',
-        },
-      ]
-      console.log(`⚠️  Using fallback job recommendations`);
+      adzunaJobs = await fetchAllJobs(searchQueries);
+      console.log(`✅ ${adzunaJobs.length} jobs fetched`);
+      console.log('📊 Sources:', [...new Set(adzunaJobs.map(j => j.source))].join(', '));
+      console.log('🔗 Official links:', adzunaJobs.filter(j => j.isOfficial).length);
+    } catch (err) {
+      console.error('❌ Job fetch error:', err.message);
     }
+
+    // ==================================================
+// 🚀 DAY 3 — INTELLIGENT JOB RANKING
+// ==================================================
+
+let rankedJobs = []
+
+if (adzunaJobs.length > 0) {
+  try {
+    console.log('\n🧠 Starting intelligent job ranking...')
+
+    const rankForm = new FormData()
+
+    rankForm.append('resume', file.buffer, {
+      filename: file.originalname,
+      contentType: file.mimetype,
+    })
+
+    rankForm.append(
+      'jobs',
+      JSON.stringify(adzunaJobs)
+    )
+
+    console.log(
+      `🐍 Calling Python ranking API at: ${PYTHON_URL}/rank-jobs`
+    )
+
+    const rankingResponse = await axios.post(
+      `${PYTHON_URL}/rank-jobs`,
+      rankForm,
+      {
+        headers: rankForm.getHeaders(),
+        timeout: 120000,
+      }
+    )
+
+    rankedJobs =
+      rankingResponse.data?.ranked_jobs || []
+
+    console.log(
+      `🏆 ${rankedJobs.length} jobs ranked successfully`
+    )
+
+    rankedJobs.forEach(job => {
+      console.log(
+        `   #${job.rank} ${job.title} → ${job.score}/100`
+      )
+    })
+
+        // Add job source information back to ranked jobs
+    rankedJobs = rankedJobs.map(rankedJob => {
+      const originalJob = adzunaJobs.find(
+        job => job.job_id === rankedJob.job_id
+      )
+
+      return {
+        ...rankedJob,
+        source: originalJob?.source || '',
+        location: originalJob?.location || 'India',
+        applyUrl: originalJob?.applyUrl || '',
+        fallbackUrl: originalJob?.fallbackUrl || '',
+        isOfficial: originalJob?.isOfficial || false,
+        created: originalJob?.created || null,
+        description: originalJob?.description || '',
+      }
+    })
+  } catch (rankingError) {
+
+    console.error(
+      '❌ Job ranking API error:',
+      rankingError.message
+    )
+
+    if (rankingError.response) {
+      console.error(
+        'Ranking API response:',
+        rankingError.response.data
+      )
+    }
+
+    // Keep original Adzuna jobs if ranking fails
+    rankedJobs = adzunaJobs
+  }
+}
 
     console.log(`\n✅ ANALYSIS COMPLETE - Returning response`);
     console.log(`   Score: ${score}`);
@@ -168,12 +246,13 @@ router.post('/', upload.single('resume'), async (req, res) => {
       skillsScore,
       keywords,
       radarData,
-      jobs: adzunaJobs,
+      jobs: rankedJobs,
       matched: matchedSkills,
       missing: missingSkills,
       skills_match: skillsScore,
       experience_match: experienceScore,
       education_match: educationScore,
+      plan: user.plan
     })
   } catch (error) {
     console.error("🔥 FULL ERROR:", error);
