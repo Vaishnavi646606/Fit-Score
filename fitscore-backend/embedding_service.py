@@ -5,6 +5,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 _first_embedding_logged = False
+_model = None
 
 
 def log_memory(phase: str, **details) -> None:
@@ -38,16 +39,22 @@ def log_memory(phase: str, **details) -> None:
     )
 
 
-# Load embedding model once when the application starts
-log_memory(
-    "before_sentence_transformer_load",
-    model="all-MiniLM-L6-v2",
-)
-model = SentenceTransformer("all-MiniLM-L6-v2")
-log_memory(
-    "after_sentence_transformer_load",
-    model="all-MiniLM-L6-v2",
-)
+def get_model():
+    """Load the embedding model only when semantic matching is needed."""
+    global _model
+
+    if _model is None:
+        log_memory(
+            "before_sentence_transformer_load",
+            model="all-MiniLM-L6-v2",
+        )
+        _model = SentenceTransformer("all-MiniLM-L6-v2")
+        log_memory(
+            "after_sentence_transformer_load",
+            model="all-MiniLM-L6-v2",
+        )
+
+    return _model
 
 
 def get_embedding(text: str):
@@ -55,6 +62,8 @@ def get_embedding(text: str):
     Convert text into a numerical vector (embedding).
     """
     global _first_embedding_logged
+
+    model = get_model()
 
     if not _first_embedding_logged:
         log_memory(
