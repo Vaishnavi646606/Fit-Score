@@ -17,19 +17,25 @@ load_dotenv()
 # MONGODB CONNECTION
 # ==================================================
 
-MONGODB_URI = os.getenv("MONGODB_URI")
+_mongo_client = None
 
-if not MONGODB_URI:
-    raise ValueError(
-        "MONGODB_URI is not set in .env"
-    )
+def get_jobs_collection():
+    global _mongo_client
 
+    if _mongo_client is None:
+        mongodb_uri = os.getenv("MONGODB_URI")
 
-client = MongoClient(MONGODB_URI)
+        if not mongodb_uri:
+            raise ValueError("MONGODB_URI is not configured")
 
-db = client["fitscore"]
+        _mongo_client = MongoClient(
+            mongodb_uri,
+            maxPoolSize=5,
+            serverSelectionTimeoutMS=5000,
+            connectTimeoutMS=5000,
+        )
 
-jobs_collection = db["jobs"]
+    return _mongo_client["fitscore"]["jobs"]
 
 
 # ==================================================
@@ -131,9 +137,9 @@ def add_job(
     # Insert document
     # ----------------------------------------------
 
-    result = jobs_collection.insert_one(
-        job_document
-    )
+    result = get_jobs_collection().insert_one(
+    job_document
+)
 
     print(
         f"✅ Job stored in MongoDB: "
@@ -233,10 +239,10 @@ def search_similar_jobs(
     # ----------------------------------------------
 
     results = list(
-        jobs_collection.aggregate(
-            pipeline
-        )
+    get_jobs_collection().aggregate(
+        pipeline
     )
+)
 
     # ----------------------------------------------
     # Display results

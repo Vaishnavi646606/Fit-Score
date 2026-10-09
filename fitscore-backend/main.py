@@ -25,7 +25,7 @@ from parser import (
 
 from matcher import calculate_score
 from llm_service import generate_llm_explanation
-from embedding_service import log_memory
+from memory_utils import log_memory
 
 
 app = FastAPI()

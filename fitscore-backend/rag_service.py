@@ -22,9 +22,20 @@ load_dotenv(ENV_PATH)
 # Gemini Client
 # -----------------------------------------
 
-client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
-)
+_gemini_client = None
+
+def get_gemini_client():
+    global _gemini_client
+
+    if _gemini_client is None:
+        api_key = os.getenv("GEMINI_API_KEY")
+
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY is not configured")
+
+        _gemini_client = genai.Client(api_key=api_key)
+
+    return _gemini_client
 
 
 # -----------------------------------------
@@ -152,7 +163,7 @@ Return ONLY valid JSON:
             try:
                 print(f"🤖 Gemini attempt {attempt + 1}/3")
 
-                response = client.models.generate_content(
+                response = get_gemini_client().models.generate_content(
                     model="gemini-2.5-flash",
                     contents=prompt
                 )

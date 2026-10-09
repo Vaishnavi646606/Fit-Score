@@ -1,19 +1,33 @@
 import pdfplumber
-import spacy
 import re
 
-from embedding_service import log_memory
+from memory_utils import log_memory
+
+_nlp = None
+_nlp_tried = False
 
 
-try:
-    log_memory("before_spacy_load", model="en_core_web_sm")
-    nlp = spacy.load("en_core_web_sm")
-    log_memory("after_spacy_load", model="en_core_web_sm")
-    print("✅ spaCy model loaded: en_core_web_sm")
-except Exception as exc:
-    nlp = None
-    print(f"⚠️ spaCy model unavailable, keyword extraction will use regex fallback: {exc}")
+def get_nlp():
+    """Load spaCy only on first use."""
+    global _nlp, _nlp_tried
 
+    if _nlp_tried:
+        return _nlp
+
+    _nlp_tried = True
+
+    try:
+        import spacy
+
+        log_memory("before_spacy_load", model="en_core_web_sm")
+        _nlp = spacy.load("en_core_web_sm")
+        log_memory("after_spacy_load", model="en_core_web_sm")
+        print("✅ spaCy model loaded: en_core_web_sm")
+    except Exception as exc:
+        _nlp = None
+        print(f"⚠️ spaCy model unavailable, using regex fallback: {exc}")
+
+    return _nlp
 
 # Comprehensive skills database
 SKILLS_DB = [
@@ -118,6 +132,7 @@ def extract_skills_with_fallback(text: str) -> list:
 def extract_keywords(text: str) -> list:
     """Extract important keywords using spaCy, with regex fallback."""
     keywords = set()
+    nlp = get_nlp()  
 
     if nlp is not None:
         try:
