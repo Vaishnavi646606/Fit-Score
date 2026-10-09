@@ -21,10 +21,21 @@ def rank_jobs(resume_text: str, jobs: list) -> list:
             job_description
         )
 
+        apply_url = (
+            job.get("applyUrl")
+            or job.get("apply_url")
+            or job.get("redirect_url")
+            or job.get("url")
+            or job.get("link")
+        )
+
         ranked_jobs.append({
             "job_id": job.get("job_id"),
             "title": job.get("title"),
             "company": job.get("company"),
+            "location": job.get("location"),
+            "source": job.get("source"),
+            "applyUrl": apply_url,
             "score": result["score"],
 
             "score_breakdown": {

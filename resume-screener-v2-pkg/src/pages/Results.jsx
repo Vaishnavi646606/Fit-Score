@@ -110,11 +110,11 @@ export default function Results() {
           </div>
           <div className={styles.topActions}>
             <Link to="/history" className="btn-ghost">View History</Link>
-            <Link to="/pricing" className="btn-primary">⚡ Upgrade</Link>
+            
           </div>
         </div>
 
-        <UsageBar />
+        
 
         <div className={styles.scoreRow}>
           <div className={`card ${styles.scoreCard}`}>
@@ -451,9 +451,9 @@ export default function Results() {
           </div>
 
           {/* Apply button */}
-          {job.applyUrl && (
+          {(job.applyUrl || job.url) && (
   <a
-    href={job.applyUrl}
+    href={job.applyUrl || job.url}
     target="_blank"
     rel="noopener noreferrer"
     style={{
