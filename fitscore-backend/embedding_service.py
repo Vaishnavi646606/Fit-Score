@@ -1,46 +1,36 @@
-from memory_utils import log_memory  # purane imports kaam karte rahein
+import os
+from functools import lru_cache
 
-_first_embedding_logged = False
-_model = None
+import numpy as np
+from google import genai
+from google.genai import types
 
-
-def get_model():
-    """Load the embedding model only when semantic matching is needed."""
-    global _model
-
-    if _model is None:
-        from sentence_transformers import SentenceTransformer  # lazy import
-
-        log_memory("before_sentence_transformer_load", model="all-MiniLM-L6-v2")
-        _model = SentenceTransformer("all-MiniLM-L6-v2")
-        log_memory("after_sentence_transformer_load", model="all-MiniLM-L6-v2")
-
-    return _model
+_client = None
 
 
+def _get_client():
+    global _client
+    if _client is None:
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY is not configured")
+        _client = genai.Client(api_key=api_key)
+    return _client
+
+
+@lru_cache(maxsize=64)
 def get_embedding(text: str):
-    global _first_embedding_logged
-
-    model = get_model()
-
-    if not _first_embedding_logged:
-        log_memory("before_first_embedding_encode", text_chars=len(text))
-
-    embedding = model.encode(text)
-
-    if not _first_embedding_logged:
-        _first_embedding_logged = True
-        log_memory("after_first_embedding_encode", embedding_dims=len(embedding))
-
-    return embedding
+    """384-dim normalized embedding. Cached, so the resume is embedded only once per request."""
+    result = _get_client().models.embed_content(
+        model="gemini-embedding-001",
+        contents=text[:6000],
+        config=types.EmbedContentConfig(output_dimensionality=384),
+    )
+    vec = np.array(result.embeddings[0].values, dtype=float)
+    return vec / np.linalg.norm(vec)
 
 
 def calculate_semantic_similarity(resume_text: str, jd_text: str) -> float:
-    from sklearn.metrics.pairwise import cosine_similarity  # lazy import
-
-    resume_embedding = get_embedding(resume_text)
-    jd_embedding = get_embedding(jd_text)
-
-    similarity = cosine_similarity([resume_embedding], [jd_embedding])[0][0]
-
-    return round(float(similarity) * 100, 2)
+    a = get_embedding(resume_text)
+    b = get_embedding(jd_text)
+    return round(float(np.dot(a, b)) * 100, 2)
