@@ -2,12 +2,18 @@ import pdfplumber
 import spacy
 import re
 
+from embedding_service import log_memory
+
+
 try:
+    log_memory("before_spacy_load", model="en_core_web_sm")
     nlp = spacy.load("en_core_web_sm")
+    log_memory("after_spacy_load", model="en_core_web_sm")
     print("✅ spaCy model loaded: en_core_web_sm")
 except Exception as exc:
     nlp = None
     print(f"⚠️ spaCy model unavailable, keyword extraction will use regex fallback: {exc}")
+
 
 # Comprehensive skills database
 SKILLS_DB = [

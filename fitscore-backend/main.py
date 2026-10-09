@@ -25,9 +25,16 @@ from parser import (
 
 from matcher import calculate_score
 from llm_service import generate_llm_explanation
+from embedding_service import log_memory
 
 
 app = FastAPI()
+log_memory("main_import_complete")
+
+
+@app.on_event("startup")
+async def log_startup_memory():
+    log_memory("fastapi_startup_complete")
 
 
 # ==================================================
@@ -67,6 +74,10 @@ async def analyze_resume(
     resume: UploadFile = File(...),
     jd: str = Form(...),
 ):
+    log_memory(
+        "analyze_start",
+        resume=resume.filename,
+    )
     print("\n🚀 Starting resume analysis...")
     print(f"📄 Resume file: {resume.filename}")
     print(f"📝 JD provided: {len(jd)} chars")
@@ -472,6 +483,10 @@ async def rank_resume_jobs(
     jobs: str = Form(...),
 ):
 
+    log_memory(
+        "rank_jobs_start",
+        resume=resume.filename,
+    )
     print(
         "\n🚀 Starting job ranking..."
     )
