@@ -2,6 +2,9 @@
 
 Fit Score is a resume screening app with a React/Vite frontend and an Express/MongoDB backend. It supports email/password auth plus Google and GitHub OAuth, and it analyzes resumes against job descriptions.
 
+
+**Live Link : https://fit-score-beta.vercel.app/**
+
 ## Project Layout
 
 - `resume-screener-v2-pkg/` - Vite frontend
