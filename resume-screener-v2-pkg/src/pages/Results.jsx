@@ -451,9 +451,9 @@ export default function Results() {
           </div>
 
           {/* Apply button */}
-          {(job.applyUrl || job.url) && (
+          {(job.applyUrl || job.url || job.fallbackUrl || job.fallback_url) && (
   <a
-    href={job.applyUrl || job.url}
+    href={job.applyUrl || job.url || job.fallbackUrl || job.fallback_url}
     target="_blank"
     rel="noopener noreferrer"
     style={{

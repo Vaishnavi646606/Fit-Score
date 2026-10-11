@@ -503,10 +503,10 @@ async function searchSerper(query) {
   } catch (error) {
 
     console.warn(
-      '⚠️ Serper search failed:',
-      error.message
-    );
-
+  '⚠️ Serper search failed:',
+  error.response?.status,
+  error.response?.data || error.message
+);
     return [];
   }
 }

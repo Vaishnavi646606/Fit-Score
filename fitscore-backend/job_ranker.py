@@ -1,34 +1,29 @@
-from matcher import calculate_score
 
+from matcher import calculate_score
 
 def rank_jobs(resume_text: str, jobs: list) -> list:
     """
     Match one resume against multiple jobs
     and return jobs ranked by FitScore.
     """
-
     ranked_jobs = []
-
     for job in jobs:
-
         job_description = job.get("description", "")
-
         if not job_description:
             continue
-
         result = calculate_score(
             resume_text,
             job_description
         )
-
         apply_url = (
-            job.get("applyUrl")
-            or job.get("apply_url")
-            or job.get("redirect_url")
-            or job.get("url")
-            or job.get("link")
+        job.get("applyUrl")
+        or job.get("apply_url")
+        or job.get("redirect_url")
+        or job.get("url")
+        or job.get("link")
+        or job.get("fallbackUrl")
+        or job.get("fallback_url")
         )
-
         ranked_jobs.append({
             "job_id": job.get("job_id"),
             "title": job.get("title"),
@@ -37,7 +32,6 @@ def rank_jobs(resume_text: str, jobs: list) -> list:
             "source": job.get("source"),
             "applyUrl": apply_url,
             "score": result["score"],
-
             "score_breakdown": {
                 "skills_match": result["skills_match"],
                 "semantic_similarity": result["semantic_similarity"],
@@ -45,22 +39,17 @@ def rank_jobs(resume_text: str, jobs: list) -> list:
                 "experience_match": result["experience_match"],
                 "education_match": result["education_match"]
             },
-
             "matched_skills": result["matched_skills"],
             "related_skills": result["related_skills"],
             "missing_skills": result["missing_skills"],
-
             "why_this_score": result["why_this_score"]
         })
-
     # Highest FitScore first
     ranked_jobs.sort(
         key=lambda job: job["score"],
         reverse=True
     )
-
     # Add rank
     for index, job in enumerate(ranked_jobs, start=1):
         job["rank"] = index
-
     return ranked_jobs

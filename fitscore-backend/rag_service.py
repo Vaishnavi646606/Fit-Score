@@ -1,3 +1,4 @@
+
 import json
 import os
 import time
@@ -24,6 +25,7 @@ load_dotenv(ENV_PATH)
 
 _gemini_client = None
 
+
 def get_gemini_client():
     global _gemini_client
 
@@ -48,17 +50,18 @@ def generate_rag_explanation(
     top_k: int = 3
 ) -> dict:
 
+    request_start = time.perf_counter()
+
     # -----------------------------------------
     # 1. Retrieve relevant jobs
     # -----------------------------------------
 
-    query_text = f"""
-    Resume:
-    {resume_text[:8000]}
+    step_start = time.perf_counter()
 
-    Job Description:
-    {jd_text[:8000]}
-    """
+    query_text = (
+        f"Resume:\n{resume_text[:5000]}\n\n"
+        f"Job Description:\n{jd_text[:5000]}"
+    )
 
     retrieved_jobs = search_similar_jobs(
         query_text,
@@ -66,121 +69,99 @@ def generate_rag_explanation(
     )
 
     print(
+        f"⏱️ RAG vector search took "
+        f"{time.perf_counter() - step_start:.2f} seconds"
+    )
+
+    print(
         f"🔎 Retrieved {len(retrieved_jobs)} relevant jobs"
     )
 
-
     # -----------------------------------------
-    # 2. Build retrieved context
+    # 2. Build compact retrieved context
     # -----------------------------------------
 
     context_parts = []
 
-    for i, job in enumerate(
-        retrieved_jobs,
-        start=1
-    ):
+    for i, job in enumerate(retrieved_jobs, start=1):
+        description = str(job.get("description", ""))[:700]
 
         context_parts.append(
-            f"""
-            Job {i}
-
-            Title:
-            {job.get("title", "")}
-
-            Company:
-            {job.get("company", "")}
-
-            Skills:
-            {job.get("skills", [])}
-
-            Description:
-            {job.get("description", "")}
-
-            Vector Similarity:
-            {job.get("score", 0)}
-            """
+            f"Job {i}:\n"
+            f"Title: {job.get('title', '')}\n"
+            f"Company: {job.get('company', '')}\n"
+            f"Skills: {job.get('skills', [])}\n"
+            f"Description: {description}\n"
+            f"Similarity: {job.get('score', 0)}"
         )
 
-    retrieved_context = "\n".join(
-        context_parts
-    )
-
+    retrieved_context = "\n\n".join(context_parts)
 
     # -----------------------------------------
-    # 3. Send retrieved context to Gemini
+    # 3. Build a smaller Gemini prompt
     # -----------------------------------------
 
     prompt = f"""
 You are an AI resume analysis assistant.
 
-Use the retrieved job information below as
-supporting context.
+Analyze the resume and job context truthfully.
 
-IMPORTANT RULES:
-
-1. Do not invent skills or experience.
-2. Do not claim the candidate has a skill unless
-   it appears in the resume.
-3. Do not change or calculate the FitScore.
-4. Use the retrieved jobs only as contextual information.
-5. Clearly distinguish the candidate's actual
-   experience from requirements found in jobs.
-6. If the retrieved context is not relevant,
-   do not force it into the explanation.
+Rules:
+- Never invent candidate skills or experience.
+- Only claim candidate skills supported by the resume.
+- Do not calculate or change the FitScore.
+- Use retrieved jobs only as supporting context.
+- Do not force irrelevant retrieved jobs into recommendations.
+- Return only valid JSON without Markdown fences.
 
 RESUME:
-{resume_text[:10000]}
+{resume_text[:5000]}
 
 CURRENT JOB DESCRIPTION:
-{jd_text[:10000]}
+{jd_text[:5000]}
 
 RETRIEVED JOB CONTEXT:
 {retrieved_context}
 
-Return ONLY valid JSON:
-
+Return this JSON structure:
 {{
-    "retrieved_jobs": [
-        {{
-            "title": "job title",
-            "company": "company",
-            "similarity": 0.0
-        }}
-    ],
-    "context_summary": "short summary of relevant retrieved context",
-    "recommendations": [
-        "truthful recommendation 1",
-        "truthful recommendation 2"
-    ]
+  "retrieved_jobs": [
+    {{
+      "title": "job title",
+      "company": "company",
+      "similarity": 0.0
+    }}
+  ],
+  "context_summary": "brief summary",
+  "recommendations": [
+    "truthful recommendation"
+  ]
 }}
+
+Use the retrieved jobs above for retrieved_jobs.
+Keep the summary brief and return at most 3 recommendations.
 """
 
+    # -----------------------------------------
+    # 4. Generate Gemini response
+    # -----------------------------------------
+
     try:
-        response = None
+        step_start = time.perf_counter()
 
-        for attempt in range(3):
-            try:
-                print(f"🤖 Gemini attempt {attempt + 1}/3")
+        print("🤖 Generating RAG explanation with Gemini...")
 
-                response = get_gemini_client().models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=prompt
-                )
+        response = get_gemini_client().models.generate_content(
+            model="gemini-3.8-flash",
+            contents=prompt
+        )
 
-                break
+        print(
+            f"⏱️ RAG Gemini request took "
+            f"{time.perf_counter() - step_start:.2f} seconds"
+        )
 
-            except Exception as e:
-                print(f"⚠️ Gemini attempt {attempt + 1} failed: {str(e)}")
-
-                if attempt < 2:
-                    wait_time = 2 ** (attempt + 1)
-                    print(f"⏳ Retrying in {wait_time} seconds...")
-                    time.sleep(wait_time)
-                else:
-                    raise e
-
-        output_text = response.text.strip()
+        output_text = (response.text or "").strip()
 
         if output_text.startswith("```"):
             output_text = (
@@ -192,14 +173,35 @@ Return ONLY valid JSON:
 
         result = json.loads(output_text)
 
+        # Keep a reliable fallback for retrieved jobs if Gemini
+        # returns an empty retrieved_jobs list.
+        returned_jobs = result.get("retrieved_jobs") or [
+            {
+                "title": job.get("title", ""),
+                "company": job.get("company", ""),
+                "similarity": job.get("score", 0)
+            }
+            for job in retrieved_jobs
+        ]
+
+        print(
+            f"⏱️ TOTAL RAG TIME: "
+            f"{time.perf_counter() - request_start:.2f} seconds"
+        )
+
         return {
-            "retrieved_jobs": result.get("retrieved_jobs", []),
+            "retrieved_jobs": returned_jobs,
             "context_summary": result.get("context_summary", ""),
-            "recommendations": result.get("recommendations", [])
+            "recommendations": result.get("recommendations", [])[:3]
         }
 
     except Exception as e:
-        print(f"❌ Gemini generation failed after retries: {str(e)}")
+        print(f"❌ RAG Gemini generation failed: {str(e)}")
+
+        print(
+            f"⏱️ TOTAL RAG TIME (fallback): "
+            f"{time.perf_counter() - request_start:.2f} seconds"
+        )
 
         return {
             "retrieved_jobs": [
@@ -210,6 +212,9 @@ Return ONLY valid JSON:
                 }
                 for job in retrieved_jobs
             ],
-            "context_summary": "Relevant jobs were successfully retrieved from MongoDB Vector Search, but Gemini was temporarily unavailable.",
+            "context_summary": (
+                "Relevant jobs were retrieved from MongoDB Vector Search, "
+                "but the Gemini explanation could not be generated."
+            ),
             "recommendations": []
         }

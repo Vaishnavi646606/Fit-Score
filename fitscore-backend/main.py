@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 
 from rag_service import generate_rag_explanation
+import time
 
 import shutil
 import os
@@ -78,6 +79,8 @@ async def analyze_resume(
         "analyze_start",
         resume=resume.filename,
     )
+    request_start = time.perf_counter()
+    print("⏱️ ANALYZE REQUEST START")
     print("\n🚀 Starting resume analysis...")
     print(f"📄 Resume file: {resume.filename}")
     print(f"📝 JD provided: {len(jd)} chars")
@@ -97,11 +100,11 @@ async def analyze_resume(
 
         print("📥 Extracting text from PDF...")
 
+        step_start = time.perf_counter()
         resume_text = extract_text_from_pdf(temp_path)
+        print(f"⏱️ PDF extraction took {time.perf_counter() - step_start:.2f} seconds")
 
-        print(
-            f"✅ Extracted {len(resume_text)} characters from resume"
-        )
+        print(f"✅ Extracted {len(resume_text)} characters from resume")
 
         print(
             f"🪪 Resume text preview: {resume_text[:500]}"
@@ -180,10 +183,16 @@ async def analyze_resume(
         # ==================================================
 
         print("🔍 Calculating match score...")
+        step_start = time.perf_counter()
+
 
         result = calculate_score(
             resume_text,
             jd
+        )
+        print(
+            f"⏱️ Resume/JD scoring took "
+            f"{time.perf_counter() - step_start:.2f} seconds"
         )
 
 
@@ -193,10 +202,17 @@ async def analyze_resume(
 
         print("🤖 Generating LLM explanation...")
 
+        step_start = time.perf_counter()
+
         llm_explanation = generate_llm_explanation(
             resume_text,
             jd,
             result
+        )
+
+        print(
+            f"⏱️ LLM explanation took "
+            f"{time.perf_counter() - step_start:.2f} seconds"
         )
 
         result["llm_explanation"] = llm_explanation
@@ -206,10 +222,17 @@ async def analyze_resume(
         # 5. RAG EXPLANATION
         # ==================================================
 
+        step_start = time.perf_counter()
+
         rag_explanation = generate_rag_explanation(
-            resume_text=resume_text,
-            jd_text=jd,
-            top_k=3,
+            resume_text,
+            jd,
+            top_k=3
+        )
+
+        print(
+            f"⏱️ RAG explanation took "
+            f"{time.perf_counter() - step_start:.2f} seconds"
         )
 
         result["rag_explanation"] = rag_explanation
@@ -323,6 +346,7 @@ async def analyze_resume(
             ]
 
 
+       
         # ==================================================
         # 9. ADZUNA JOB SEARCH
         # ==================================================
@@ -330,28 +354,26 @@ async def analyze_resume(
         ranked_jobs = []
 
         try:
+            print("\n🔎 Searching Adzuna jobs...")
 
-            print(
-                "\n🔎 Searching Adzuna jobs..."
-            )
-
+            adzuna_start = time.perf_counter()
             adzuna_jobs = search_adzuna_jobs()
 
             print(
-                f"✅ Adzuna returned "
-                f"{len(adzuna_jobs)} jobs"
+                f"⏱️ Adzuna job search took "
+                f"{time.perf_counter() - adzuna_start:.2f} seconds"
             )
 
+            print(f"✅ Adzuna returned {len(adzuna_jobs)} jobs")
 
             # ==================================================
             # 10. RANK ADZUNA JOBS
             # ==================================================
 
             if adzuna_jobs:
+                print("🧠 Ranking Adzuna jobs...")
 
-                print(
-                    "🧠 Ranking Adzuna jobs..."
-                )
+                ranking_start = time.perf_counter()
 
                 ranked_jobs = rank_jobs(
                     resume_text,
@@ -359,33 +381,23 @@ async def analyze_resume(
                 )
 
                 print(
-                    f"🏆 Ranked "
-                    f"{len(ranked_jobs)} jobs"
+                    f"⏱️ Adzuna job ranking took "
+                    f"{time.perf_counter() - ranking_start:.2f} seconds"
                 )
 
+                print(f"🏆 Ranked {len(ranked_jobs)} jobs")
 
             else:
-
-                print(
-                    "⚠️ No Adzuna jobs found"
-                )
-
+                print("⚠️ No Adzuna jobs found")
                 ranked_jobs = []
 
-
         except Exception as job_error:
-
-            print(
-                f"❌ Job recommendation error: "
-                f"{str(job_error)}"
-            )
+            print(f"❌ Job recommendation error: {str(job_error)}")
 
             import traceback
-
             traceback.print_exc()
 
             ranked_jobs = []
-
 
         # ==================================================
         # 11. ADD JOBS TO RESULT
@@ -436,14 +448,21 @@ async def analyze_resume(
         )
 
 
+        
         # ==================================================
         # 13. RETURN ANALYSIS
         # ==================================================
+
+        print(
+            f"⏱️ TOTAL ANALYZE TIME: "
+            f"{time.perf_counter() - request_start:.2f} seconds"
+        )
 
         return {
             "success": True,
             "data": result,
         }
+
 
 
     except Exception as e:
